@@ -2,7 +2,7 @@
 
 # Update These Variables
 BASE_HREF = '/'
-GITHUB_REPO = https://github.com/Marchhealth/assist_web.git
+GITHUB_REPO = git@github.com:Marchhealth/Endoassist.git
 #BUILD_VERSION := $(shell grep 'version:' pubspec.yaml | awk '{print $$2}')
 BUILD_VERSION := $(shell grep 'version:' pubspec.yaml | awk '{print $$2}')
 //CUSTOM_DOMAIN = www.marchhealth.co
