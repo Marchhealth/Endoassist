@@ -18,6 +18,21 @@ class _LaparoscopyAnalysisState extends State<LaparoscopyAnalysis> {
   String? _previewUrl;
   Map<String, dynamic>? _analysisResults;
 
+  // Add these mock results
+  final Map<String, dynamic> _mockResults = {
+    'segmented_images': [
+      'assets/Result-1.jpg',
+      'assets/Result-2.jpg'
+    ],
+    'area_percentage': 35.8,
+    'severity': 'Moderate',
+    'recommendations': [
+      'Regular monitoring recommended',
+      'Consider hormonal therapy',
+      'Schedule follow-up in 3 months'
+    ]
+  };
+
   Future<void> _pickFile() async {
     final html.FileUploadInputElement input = html.FileUploadInputElement()
       ..accept = '.jpg,.mp4';
@@ -55,44 +70,13 @@ class _LaparoscopyAnalysisState extends State<LaparoscopyAnalysis> {
 
     setState(() => _isProcessing = true);
 
-    try {
-      final formData = html.FormData();
-      
-      // تبدیل فایل به فرمت مناسب
-      final reader = html.FileReader();
-      reader.readAsArrayBuffer(_selectedFile!);
-      await reader.onLoad.first;
-      
-      // اضافه کردن فایل به formData
-      final blob = html.Blob([reader.result]);
-      formData.appendBlob('file', blob, _selectedFile!.name);
+    // Simulate 15 second processing time
+    await Future.delayed(const Duration(seconds: 15));
 
-      // ارسال به API پایتون
-      final request = html.HttpRequest();
-      request.open('POST', 'http://localhost:8000/analyze-image'); // یا آدرس واقعی API
-      
-      request.onLoad.listen((e) {
-        if (request.status == 200) {
-          final response = jsonDecode(request.responseText!);
-          // نمایش نتیجه
-          setState(() {
-            _analysisResults = {
-              'segmented_image': response['segmented_image'],
-              'area_percentage': response['area_percentage'],
-              'severity': response['severity'],
-              'recommendations': response['recommendations']
-            };
-          });
-        }
-      });
-
-      request.send(formData);
-
-    } catch (e) {
-      debugPrint('Error: $e');
-    } finally {
-      setState(() => _isProcessing = false);
-    }
+    setState(() {
+      _isProcessing = false;
+      _analysisResults = _mockResults;
+    });
   }
 
   @override
@@ -226,8 +210,18 @@ class _LaparoscopyAnalysisState extends State<LaparoscopyAnalysis> {
             ),
           ),
           const SizedBox(height: 10),
-          if (_analysisResults!['segmented_image'] != null)
-            Image.network(_analysisResults!['segmented_image']),
+          // Display both result images
+          for (String imagePath in _analysisResults!['segmented_images'])
+            Column(
+              children: [
+                Image.asset(
+                  imagePath,
+                  fit: BoxFit.contain,
+                  height: 200,
+                ),
+                const SizedBox(height: 10),
+              ],
+            ),
           Text('Area Percentage: ${_analysisResults!['area_percentage']}%'),
           Text('Severity: ${_analysisResults!['severity']}'),
           const SizedBox(height: 10),
