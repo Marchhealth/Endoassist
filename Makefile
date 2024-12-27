@@ -1,8 +1,8 @@
 # Makefile for deploying Flutter web app to GitHub Pages
 
 # Update These Variables
-BASE_HREF = '/'
-GITHUB_REPO = git@github.com:Marchhealth/Endoassist.git
+BASE_HREF = '/assist-web/'
+GITHUB_REPO = git@github.com:Marchhealth/assist-web.git
 #BUILD_VERSION := $(shell grep 'version:' pubspec.yaml | awk '{print $$2}')
 BUILD_VERSION := $(shell grep 'version:' pubspec.yaml | awk '{print $$2}')
 //CUSTOM_DOMAIN = www.marchhealth.co
