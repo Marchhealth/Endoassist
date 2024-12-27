@@ -16,6 +16,9 @@ class _LabReportUploadTabState extends State<LabReportUploadTab> {
   bool _isConfirmed = false;
   Map<String, dynamic>? _analysisResults;
   String? _previewUrl;
+  String? _assistResponse;
+  bool _isSurgeonConfirmed = false;
+  bool _isWaitingForAssist = false;
 
   Future<void> _pickFile() async {
     final input = html.FileUploadInputElement()..accept = '.pdf';
@@ -33,53 +36,71 @@ class _LabReportUploadTabState extends State<LabReportUploadTab> {
   Future<void> _processFile() async {
     if (_selectedFile == null) return;
 
-    setState(() => _isProcessing = true);
+    setState(() {
+      _isProcessing = true;
+      _isWaitingForAssist = true;
+    });
 
     try {
-      // Convert PDF to base64
-      final reader = html.FileReader();
-      reader.readAsArrayBuffer(_selectedFile!);
-      await reader.onLoad.first;
-      final base64PDF = base64Encode(reader.result as List<int>);
+      // Simulate API call to Assist
+      await Future.delayed(const Duration(seconds: 3));
+      
+      // Mock response from Assist
+      _assistResponse = '''
+        Analysis Results:
+        - CA-125 Level: 45 U/mL (Elevated)
+        - Hormonal Imbalance Detected
+        - Inflammatory Markers Present
+        
+        Severity Level: Moderate
+        
+        Recommended Actions:
+        1. Further diagnostic imaging
+        2. Hormonal therapy consideration
+        3. Surgical evaluation recommended
+      ''';
 
-      final response = await http.post(
-        Uri.parse('https://marchv1.openai.azure.com/openai/deployments/gpt-4/chat/completions?api-version=2024-02-15-preview'),
-        headers: {
-          'Content-Type': 'application/json',
-          'api-key': 'b12a39b621964269a0da06699f814f01',
-        },
-        body: jsonEncode({
-          "messages": [
-            {
-              "role": "system",
-              "content": "You are a medical lab report analyzer specialized in endometriosis cases."
-            },
-            {
-              "role": "user",
-              "content": "Here is the lab report in base64: $base64PDF. Please analyze it and provide key findings related to endometriosis."
-            }
-          ]
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
-        setState(() {
-          _analysisResults = {
-            'findings': responseData['choices'][0]['message']['content'],
-            'confidence': 0.92,
-            'recommendations': [
-              'Additional hormone tests recommended',
-              'Monitor CA-125 levels closely',
-              'Consider follow-up ultrasound'
-            ]
-          };
-        });
-      }
+      setState(() {
+        _analysisResults = {
+          'findings': _assistResponse,
+          'confidence': 0.89,
+          'needsSurgeonConfirmation': true,
+        };
+        _isWaitingForAssist = false;
+      });
     } catch (e) {
       debugPrint('Error: $e');
+      // Show error in UI
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error processing file')),
+      );
     } finally {
       setState(() => _isProcessing = false);
+    }
+  }
+
+  Future<void> _handleSurgeonConfirmation() async {
+    setState(() => _isSurgeonConfirmed = true);
+
+    try {
+      // Send confirmed analysis to Assist recommendation
+      // Simulate API call
+      await Future.delayed(const Duration(seconds: 2));
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Analysis confirmed and sent for recommendations'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      debugPrint('Error sending confirmation: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error sending confirmation'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -200,9 +221,18 @@ class _LabReportUploadTabState extends State<LabReportUploadTab> {
       child: Column(
         children: [
           _buildBoxHeader("Analysis Results", Icons.analytics),
-          if (_isProcessing)
+          if (_isProcessing || _isWaitingForAssist)
             const Expanded(
-              child: Center(child: CircularProgressIndicator()),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text("Analyzing report..."),
+                  ],
+                ),
+              ),
             )
           else if (_analysisResults != null)
             Expanded(
@@ -211,17 +241,38 @@ class _LabReportUploadTabState extends State<LabReportUploadTab> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildResultSection("Key Findings", _analysisResults!['findings']),
+                    _buildResultSection("Analysis from Assist", _assistResponse ?? ""),
                     const SizedBox(height: 16),
                     _buildResultSection(
-                      "Confidence",
+                      "Confidence Score",
                       "${(_analysisResults!['confidence'] * 100).toStringAsFixed(1)}%",
                     ),
-                    const SizedBox(height: 16),
-                    _buildResultSection(
-                      "Recommendations",
-                      (_analysisResults!['recommendations'] as List).join('\n• '),
-                    ),
+                    const SizedBox(height: 24),
+                    if (!_isSurgeonConfirmed)
+                      Center(
+                        child: ElevatedButton.icon(
+                          onPressed: _handleSurgeonConfirmation,
+                          icon: const Icon(Icons.check_circle),
+                          label: const Text("Confirm Analysis as Surgeon"),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                    if (_isSurgeonConfirmed)
+                      const Center(
+                        child: Text(
+                          "✓ Analysis confirmed by surgeon",
+                          style: TextStyle(
+                            color: Colors.green,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -229,7 +280,7 @@ class _LabReportUploadTabState extends State<LabReportUploadTab> {
           else
             const Expanded(
               child: Center(
-                child: Text("No analysis results yet"),
+                child: Text("Upload a report to see analysis"),
               ),
             ),
         ],

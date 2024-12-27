@@ -18,10 +18,10 @@ class _LaparoscopyAnalysisState extends State<LaparoscopyAnalysis> {
   String? _previewUrl;
   Map<String, dynamic>? _analysisResults;
 
-  // Add these mock results
+  // Update mock results with local image paths
   final Map<String, dynamic> _mockResults = {
     'segmented_images': [
-      'assets/Result-1.jpg',
+      'assets/Result-1.jpg',  // Make sure these images exist in assets
       'assets/Result-2.jpg'
     ],
     'area_percentage': 35.8,
@@ -70,12 +70,12 @@ class _LaparoscopyAnalysisState extends State<LaparoscopyAnalysis> {
 
     setState(() => _isProcessing = true);
 
-    // Simulate 15 second processing time
+    // Show loading for 15 seconds
     await Future.delayed(const Duration(seconds: 15));
 
     setState(() {
       _isProcessing = false;
-      _analysisResults = _mockResults;
+      _analysisResults = _mockResults;  // Show predefined results
     });
   }
 
@@ -210,23 +210,36 @@ class _LaparoscopyAnalysisState extends State<LaparoscopyAnalysis> {
             ),
           ),
           const SizedBox(height: 10),
-          // Display both result images
+          // Display mock result images
           for (String imagePath in _analysisResults!['segmented_images'])
-            Column(
-              children: [
-                Image.asset(
-                  imagePath,
-                  fit: BoxFit.contain,
-                  height: 200,
-                ),
-                const SizedBox(height: 10),
-              ],
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Image.asset(
+                imagePath,
+                fit: BoxFit.contain,
+                height: 200,
+              ),
             ),
-          Text('Area Percentage: ${_analysisResults!['area_percentage']}%'),
-          Text('Severity: ${_analysisResults!['severity']}'),
-          const SizedBox(height: 10),
-          const Text('Recommendations:'),
-          ..._analysisResults!['recommendations'].map((r) => Text('• $r')),
+          const SizedBox(height: 16),
+          Text(
+            'Area Percentage: ${_analysisResults!['area_percentage']}%',
+            style: const TextStyle(fontSize: 16),
+          ),
+          Text(
+            'Severity: ${_analysisResults!['severity']}',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Recommendations:',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          ..._analysisResults!['recommendations']
+              .map((r) => Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Text('• $r'),
+                  ))
+              .toList(),
         ],
       ),
     );
