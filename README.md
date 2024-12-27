@@ -1,28 +1,16 @@
-# Endoassist
+# endometriosis_web
 
-A web-based application for endometriosis diagnosis and treatment planning.
+A new Flutter project.
 
-## Features
+## Getting Started
 
-- Patient Profile Management
-- Lab Report Analysis and Processing
-- AI-Powered Surgery Recommendation System
-- Laparoscopy Image/Video Analysis
-- Classification Assistant
+This project is a starting point for a Flutter application.
 
-## Technologies
+A few resources to get you started if this is your first Flutter project:
 
-- Frontend: Flutter Web
-- Backend API: Python FastAPI
-- AI Models: Azure OpenAI Services
-- Image Processing: OpenCV and TensorFlow
+- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
+- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
 
-## Setup
-
-### Prerequisites
-- Flutter SDK
-- Python 3.8+
-- Git
-
-### Installation
-1. Clone the repository:
+For help getting started with Flutter development, view the
+[online documentation](https://docs.flutter.dev/), which offers tutorials,
+samples, guidance on mobile development, and a full API reference.
