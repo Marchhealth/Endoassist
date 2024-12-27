@@ -1,7 +1,7 @@
 # Makefile for deploying Flutter web app to GitHub Pages
 
 # Update These Variables
-BASE_HREF = '/'
+BASE_HREF = '/َassist_web/'
 GITHUB_REPO = https://github.com/Marchhealth/assist_web.git
 
 deploy-web:
