@@ -1,8 +1,8 @@
 # Makefile for deploying Flutter web app to GitHub Pages
 
 # Update These Variables
-BASE_HREF = '/َassist_web/'
-GITHUB_REPO = https://github.com/Marchhealth/assist_web.git
+BASE_HREF = '/endometriosis_web/'
+GITHUB_REPO = https://github.com/Marchhealth/endometriosis_web.git
 
 deploy-web:
 	@echo "Clean existing repository..."
