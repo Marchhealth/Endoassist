@@ -2,7 +2,7 @@
 
 # Update These Variables
 BASE_HREF = '/assist-web/'
-GITHUB_REPO = https://github.com/Marchhealth/assist-web.git
+GITHUB_REPO = git@github.com:Marchhealth/assist-web.git
 
 deploy-web:
 	@echo "Clean existing repository..."
