@@ -93,12 +93,12 @@ class _DashboardPageState extends State<DashboardPage> {
           Icons.person_add,
           PatientInfoPage(onSave: addPatient), // ذخیره اطلاعات بیمار
         ),
-        _buildActionCard(
-          context,
-          "Assessment Tools",
-          Icons.analytics,
-          const Placeholder(), // این بخش فعلا خالی است
-        ),
+        // _buildActionCard(
+        //   context,
+        //   "Assessment Tools",
+        //   Icons.analytics,
+        //   const Placeholder(), // این بخش فعلا خالی است
+        // ),
       ],
     );
   }

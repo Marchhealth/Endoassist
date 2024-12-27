@@ -33,7 +33,6 @@ migrate_working_dir/
 build/
 *.dart.js
 *.info.json
-*.js
 *.js_*
 *.js.deps
 *.js.map
