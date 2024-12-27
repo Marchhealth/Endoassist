@@ -19,7 +19,7 @@ deploy-web:
 	@echo "PUSH & COMMIT"
 	git add . && \
 	git commit -m "Deploy Version $(BUILD_VERSION)" && \
-	git push -u --force origin dev
+	git push -u --force origin main
 
 
 	@echo "Deploying to git repository"
@@ -27,9 +27,9 @@ deploy-web:
 	git init && \
 	git add . && \
 	git commit -m "Deploy Version $(BUILD_VERSION)" && \
-	git branch -M dev && \
+	git branch -M main && \
 	git remote add origin $(GITHUB_REPO) && \
-	git push -u --force origin dev
+	git push -u --force origin main
 
 	cd ../..
 	@echo "🟢 Finished Deploy"
