@@ -10,9 +10,8 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  final List<Map<String, String>> patients = []; // ذخیره اطلاعات بیماران
+  final List<Map<String, String>> patients = [];
 
-  // اضافه کردن بیمار به لیست
   void addPatient(Map<String, String> patientData) {
     setState(() {
       patients.add(patientData);
@@ -23,7 +22,7 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.black87,
+        backgroundColor: Colors.indigo,
         title: const Text(
           "Dashboard",
           style: TextStyle(
@@ -32,32 +31,33 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         ),
         centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      backgroundColor: Colors.grey[200],
+      backgroundColor: Colors.grey[100],
       body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildWelcomeMessage(),
-              const SizedBox(height: 20),
-              _buildQuickActions(),
-              const SizedBox(height: 20),
-              const Text(
-                "Patients Overview",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+        child: Center(
+          child: Container(
+            width: MediaQuery.of(context).size.width*0.95,
+            alignment: Alignment.center,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 20),
+                _buildQuickActions(),
+                const SizedBox(height: 30),
+                const Text(
+                  "Patients Overview",
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 10),
-              _buildPatientsList(),
-              const SizedBox(height: 10),
-              _buildLogoutButton(),
-            ],
+                const SizedBox(height: 10),
+                _buildPatientsList(),
+              //  const SizedBox(height: 20),
+               // _buildLogoutButton(),
+              ],
+            ),
           ),
         ),
       ),
@@ -68,17 +68,17 @@ class _DashboardPageState extends State<DashboardPage> {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.blueAccent, Colors.lightBlueAccent],
+          colors: [Colors.indigo, Colors.blueAccent],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(12),
-        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))],
+        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2))],
       ),
       padding: const EdgeInsets.all(16),
       child: const Text(
         "Welcome to Endometriosis Assist",
-        style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: Colors.white),
+        style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: Colors.white),
       ),
     );
   }
@@ -91,22 +91,29 @@ class _DashboardPageState extends State<DashboardPage> {
           context,
           "Enter Patient Info",
           Icons.person_add,
-          PatientInfoPage(onSave: addPatient), // ذخیره اطلاعات بیمار
+          PatientInfoPage(onSave: addPatient),
         ),
         // _buildActionCard(
         //   context,
-        //   "Assessment Tools",
+        //   "View Analytics",
         //   Icons.analytics,
-        //   const Placeholder(), // این بخش فعلا خالی است
+        //   Placeholder(),
         // ),
       ],
     );
   }
 
   Widget _buildPatientsList() {
-    return Container(
+    return SizedBox(
       height: 300,
-      child: ListView.builder(
+      child: patients.isEmpty
+          ? Center(
+        child: Text(
+          "No patients added yet.",
+          style: TextStyle(color: Colors.grey[600], fontSize: 16),
+        ),
+      )
+          : ListView.builder(
         itemCount: patients.length,
         itemBuilder: (context, index) {
           final patient = patients[index];
@@ -135,9 +142,12 @@ class _DashboardPageState extends State<DashboardPage> {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 4,
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      margin: const EdgeInsets.symmetric(vertical: 8),
       child: ListTile(
-        leading: const Icon(Icons.person, color: Colors.blueAccent, size: 36),
+        leading: CircleAvatar(
+          backgroundColor: Colors.indigo,
+          child: const Icon(Icons.person, color: Colors.white),
+        ),
         title: Text(
           title,
           style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
@@ -148,7 +158,6 @@ class _DashboardPageState extends State<DashboardPage> {
         ),
         trailing: const Icon(Icons.arrow_forward_ios, color: Colors.black54),
         onTap: () {
-          // ارسال کل داده‌های بیمار به صفحه PatientProfilePage
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -164,11 +173,11 @@ class _DashboardPageState extends State<DashboardPage> {
     return GestureDetector(
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => page)),
       child: Container(
-        width: 160,
+        width: MediaQuery.of(context).size.width*0.95,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.white, Colors.grey[200]!],
+            colors: [Colors.white, Colors.grey[100]!],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -178,12 +187,12 @@ class _DashboardPageState extends State<DashboardPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 36, color: Colors.blueAccent),
+            Icon(icon, size: 36, color: Colors.indigo),
             const SizedBox(height: 10),
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87),
             ),
           ],
         ),
@@ -194,14 +203,15 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildLogoutButton() {
     return Center(
       child: ElevatedButton(
-        onPressed: () {
-          Navigator.pop(context);
-        },
+        onPressed: () => Navigator.pop(context),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.red,
           padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
         ),
-        child: const Text("Log Out", style: TextStyle(fontSize: 18, color: Colors.white)),
+        child: const Text(
+          "Log Out",
+          style: TextStyle(fontSize: 18, color: Colors.white),
+        ),
       ),
     );
   }

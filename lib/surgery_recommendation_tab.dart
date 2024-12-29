@@ -60,7 +60,7 @@ Based on the following patient data, please provide a surgery recommendation ana
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.blue[700]!, Colors.blue[500]!],
+          colors: [Colors.indigo[700]!, Colors.indigo[500]!],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -135,7 +135,7 @@ Based on the following patient data, please provide a surgery recommendation ana
       ),
       child: const Row(
         children: [
-          Icon(Icons.medical_services, color: Colors.blue),
+          Icon(Icons.medical_services, color: Colors.indigo),
           SizedBox(width: 8),
           Text(
             "Surgery Recommendation Assistant",
@@ -196,7 +196,7 @@ Based on the following patient data, please provide a surgery recommendation ana
           maxWidth: MediaQuery.of(context).size.width * 0.7,
         ),
         decoration: BoxDecoration(
-          color: isUser ? Colors.blue[600] : Colors.grey[200],
+          color: isUser ? Colors.indigo[600] : Colors.grey[200],
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -262,7 +262,7 @@ Based on the following patient data, please provide a surgery recommendation ana
               }
             },
             mini: true,
-            backgroundColor: Colors.blue[600],
+            backgroundColor: Colors.indigo[600],
             child: const Icon(Icons.send, color: Colors.white),
           ),
         ],

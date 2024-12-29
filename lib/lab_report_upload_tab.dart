@@ -141,8 +141,8 @@ class _LabReportUploadTabState extends State<LabReportUploadTab> {
           Expanded(flex: 1, child: _buildUploadBox()),
           const SizedBox(width: 24),
           Expanded(flex: 1, child: _buildResultsBox()),
-          const SizedBox(width: 24),
-          Expanded(flex: 1, child: _buildConfirmationBox()),
+        //  const SizedBox(width: 24),
+        //  Expanded(flex: 1, child: _buildConfirmationBox()),
         ],
       ),
     );
@@ -151,6 +151,7 @@ class _LabReportUploadTabState extends State<LabReportUploadTab> {
   Widget _buildUploadBox() {
     return Container(
       height: 500,
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -178,10 +179,13 @@ class _LabReportUploadTabState extends State<LabReportUploadTab> {
                   ElevatedButton(
                     onPressed: _pickFile,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
+                      backgroundColor: Colors.indigo,
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     ),
-                    child: const Text("Select PDF"),
+                    child: const Text("Select PDF",
+
+                      style: TextStyle(fontSize: 12, color: Colors.white),
+                  ),
                   ),
                   if (_selectedFile != null) ...[
                     const SizedBox(height: 16),
@@ -206,6 +210,8 @@ class _LabReportUploadTabState extends State<LabReportUploadTab> {
 
   Widget _buildResultsBox() {
     return Container(
+      padding: EdgeInsets.all(16),
+
       height: 500,
       decoration: BoxDecoration(
         color: Colors.white,
@@ -329,7 +335,7 @@ class _LabReportUploadTabState extends State<LabReportUploadTab> {
   Widget _buildBoxHeader(String title, IconData icon) {
     return Row(
       children: [
-        Icon(icon, color: Colors.blue[600]),
+        Icon(icon, color: Colors.indigo[600]),
         const SizedBox(width: 8),
         Text(
           title,

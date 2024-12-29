@@ -81,12 +81,12 @@ class _ClassificationAssistantTabState extends State<ClassificationAssistantTab>
             flex: 1,
             child: _buildResultsBox(),
           ),
-          const SizedBox(width: 24),
-          // Confirmation Box
-          Expanded(
-            flex: 1,
-            child: _buildConfirmationBox(),
-          ),
+          // const SizedBox(width: 24),
+          // // Confirmation Box
+          // Expanded(
+          //   flex: 1,
+          //   child: _buildConfirmationBox(),
+          // ),
         ],
       ),
     );
@@ -95,6 +95,7 @@ class _ClassificationAssistantTabState extends State<ClassificationAssistantTab>
   Widget _buildUploadBox() {
     return Container(
       height: 500,
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -115,7 +116,7 @@ class _ClassificationAssistantTabState extends State<ClassificationAssistantTab>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.cloud_upload, size: 48, color: Colors.blue[300]),
+                  Icon(Icons.cloud_upload, size: 48, color: Colors.indigo[300]),
                   const SizedBox(height: 16),
                   const Text("Drag and drop MRI images here"),
                   const SizedBox(height: 16),
@@ -125,10 +126,10 @@ class _ClassificationAssistantTabState extends State<ClassificationAssistantTab>
                       _processImages();
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
+                      backgroundColor: Colors.indigo,
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     ),
-                    child: const Text("Select Files"),
+                    child: const Text("Select Files",style: TextStyle(color: Colors.white,fontSize: 12),),
                   ),
                   if (selectedFiles.isNotEmpty) ...[
                     const SizedBox(height: 16),
@@ -146,6 +147,7 @@ class _ClassificationAssistantTabState extends State<ClassificationAssistantTab>
   Widget _buildResultsBox() {
     return Container(
       height: 500,
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -220,7 +222,7 @@ class _ClassificationAssistantTabState extends State<ClassificationAssistantTab>
   Widget _buildBoxHeader(String title, IconData icon) {
     return Row(
       children: [
-        Icon(icon, color: Colors.blue[600]),
+        Icon(icon, color: Colors.indigo[600]),
         const SizedBox(width: 8),
         Text(
           title,
@@ -250,7 +252,7 @@ class _ClassificationAssistantTabState extends State<ClassificationAssistantTab>
             value,
             style: const TextStyle(
               fontSize: 16,
-              color: Colors.blue,
+              color: Colors.indigo,
               fontWeight: FontWeight.w500,
             ),
           ),

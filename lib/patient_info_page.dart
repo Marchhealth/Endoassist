@@ -59,7 +59,7 @@ class _PatientInfoPageState extends State<PatientInfoPage> {
               child: ElevatedButton(
                 onPressed: _savePatientData,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueAccent,
+                  backgroundColor: Colors.indigoAccent,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 50,
                     vertical: 15,
@@ -67,7 +67,7 @@ class _PatientInfoPageState extends State<PatientInfoPage> {
                 ),
                 child: const Text(
                   "Save",
-                  style: TextStyle(fontSize: 18, color: Colors.white),
+                  style: TextStyle(color: Colors.white,fontSize: 12),
                 ),
               ),
             ),

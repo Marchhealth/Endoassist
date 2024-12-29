@@ -112,7 +112,7 @@ class _LaparoscopyAnalysisState extends State<LaparoscopyAnalysis> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.blue[600],
+        color: Colors.indigo[600],
         borderRadius: BorderRadius.circular(10),
       ),
       child: const Row(
@@ -145,7 +145,7 @@ class _LaparoscopyAnalysisState extends State<LaparoscopyAnalysis> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.cloud_upload, size: 50, color: Colors.blue[600]),
+              Icon(Icons.cloud_upload, size: 50, color: Colors.indigo[600]),
               const SizedBox(height: 10),
               const Text('Click to upload video (mp4) or image (jpg)'),
             ],
@@ -180,7 +180,7 @@ class _LaparoscopyAnalysisState extends State<LaparoscopyAnalysis> {
       child: ElevatedButton(
         onPressed: _isProcessing ? null : _processFile,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue[600],
+          backgroundColor: Colors.indigo[600],
           padding: const EdgeInsets.symmetric(vertical: 16),
         ),
         child: _isProcessing

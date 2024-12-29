@@ -69,7 +69,7 @@ class PatientProfilePage extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.blueAccent, Colors.lightBlueAccent],
+          colors: [Colors.indigoAccent, Colors.lightBlueAccent],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -82,7 +82,7 @@ class PatientProfilePage extends StatelessWidget {
           const CircleAvatar(
             radius: 40,
             backgroundColor: Colors.white,
-            child: Icon(Icons.person, size: 40, color: Colors.blueAccent),
+            child: Icon(Icons.person, size: 40, color: Colors.indigoAccent),
           ),
           const SizedBox(width: 20),
           Column(
