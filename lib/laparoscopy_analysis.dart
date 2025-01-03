@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:html' as html;
 import 'package:video_player/video_player.dart';
-import 'dart:convert';
+import 'package:provider/provider.dart';
+import 'providers/analysis_provider.dart';
 
 class LaparoscopyAnalysis extends StatefulWidget {
   const LaparoscopyAnalysis({super.key});
@@ -11,31 +12,17 @@ class LaparoscopyAnalysis extends StatefulWidget {
 }
 
 class _LaparoscopyAnalysisState extends State<LaparoscopyAnalysis> {
-  html.File? _selectedFile;
-  String? _selectedFileType;
-  bool _isProcessing = false;
+  late AnalysisProvider _provider;
   VideoPlayerController? _videoController;
-  String? _previewUrl;
-  Map<String, dynamic>? _analysisResults;
 
-  // Update mock results with local image paths
-  final Map<String, dynamic> _mockResults = {
-    'segmented_images': [
-      'assets/Result-1.jpg',  // Make sure these images exist in assets
-      'assets/Result-2.jpg'
-    ],
-    'area_percentage': 35.8,
-    'severity': 'Moderate',
-    'recommendations': [
-      'Regular monitoring recommended',
-      'Consider hormonal therapy',
-      'Schedule follow-up in 3 months'
-    ]
-  };
+  @override
+  void initState() {
+    super.initState();
+    _provider = Provider.of<AnalysisProvider>(context, listen: false);
+  }
 
   Future<void> _pickFile() async {
-    final html.FileUploadInputElement input = html.FileUploadInputElement()
-      ..accept = '.jpg,.mp4';
+    final input = html.FileUploadInputElement()..accept = '.jpg,.mp4';
     input.click();
 
     await input.onChange.first;
@@ -45,38 +32,33 @@ class _LaparoscopyAnalysisState extends State<LaparoscopyAnalysis> {
       reader.readAsDataUrl(file);
 
       await reader.onLoad.first;
-      setState(() {
-        _selectedFile = file;
-        _selectedFileType = file.type;
-        _previewUrl = reader.result as String;
-        
-        if (_selectedFileType!.contains('video')) {
-          _initializeVideoPlayer();
-        }
-      });
+      _provider.setLaparoscopyFile(
+        file,
+        file.type,
+        reader.result as String,
+      );
+
+      if (file.type.contains('video')) {
+        _initializeVideoPlayer(reader.result as String);
+      }
     }
   }
 
-  Future<void> _initializeVideoPlayer() async {
-    if (_previewUrl != null) {
-      _videoController = VideoPlayerController.network(_previewUrl!);
-      await _videoController!.initialize();
-      setState(() {});
-    }
+  Future<void> _initializeVideoPlayer(String url) async {
+    _videoController = VideoPlayerController.network(url);
+    await _videoController?.initialize();
+    setState(() {});
   }
 
   Future<void> _processFile() async {
-    if (_selectedFile == null) return;
+    if (_provider.laparoscopyFile == null) return;
 
-    setState(() => _isProcessing = true);
+    _provider.setLaparoscopyProcessing(true);
 
-    // Show loading for 15 seconds
     await Future.delayed(const Duration(seconds: 15));
 
-    setState(() {
-      _isProcessing = false;
-      _analysisResults = _mockResults;  // Show predefined results
-    });
+    _provider.setLaparoscopyResults(_provider.mockLaparoscopyResults);
+    _provider.setLaparoscopyProcessing(false);
   }
 
   @override
@@ -95,7 +77,7 @@ class _LaparoscopyAnalysisState extends State<LaparoscopyAnalysis> {
           _buildHeader(),
           const SizedBox(height: 20),
           _buildUploadSection(),
-          if (_selectedFile != null) ...[
+          if (_provider.laparoscopyFile != null) ...[
             const SizedBox(height: 20),
             _buildPreview(),
             const SizedBox(height: 20),
@@ -163,13 +145,13 @@ class _LaparoscopyAnalysisState extends State<LaparoscopyAnalysis> {
         border: Border.all(color: Colors.grey[300]!),
         borderRadius: BorderRadius.circular(10),
       ),
-      child: _selectedFileType?.contains('video') == true && _videoController != null
+      child: _provider.laparoscopyFileType?.contains('video') == true && _videoController != null
           ? AspectRatio(
               aspectRatio: _videoController!.value.aspectRatio,
               child: VideoPlayer(_videoController!),
             )
-          : _selectedFileType?.contains('image') == true && _previewUrl != null
-              ? Image.network(_previewUrl!, fit: BoxFit.contain)
+          : _provider.laparoscopyFileType?.contains('image') == true && _provider.laparoscopyPreviewUrl != null
+              ? Image.network(_provider.laparoscopyPreviewUrl!, fit: BoxFit.contain)
               : const Center(child: Text('Preview not available')),
     );
   }
@@ -178,12 +160,12 @@ class _LaparoscopyAnalysisState extends State<LaparoscopyAnalysis> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: _isProcessing ? null : _processFile,
+        onPressed: _provider.isLaparoscopyProcessing ? null : _processFile,
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.blue[600],
           padding: const EdgeInsets.symmetric(vertical: 16),
         ),
-        child: _isProcessing
+        child: _provider.isLaparoscopyProcessing
             ? const CircularProgressIndicator(color: Colors.white)
             : const Text('Process File'),
       ),
@@ -191,7 +173,7 @@ class _LaparoscopyAnalysisState extends State<LaparoscopyAnalysis> {
   }
 
   Widget _buildProcessedResult() {
-    if (_analysisResults == null) return const SizedBox();
+    if (_provider.laparoscopyResults == null) return const SizedBox();
     
     return Container(
       padding: const EdgeInsets.all(16),
@@ -211,7 +193,7 @@ class _LaparoscopyAnalysisState extends State<LaparoscopyAnalysis> {
           ),
           const SizedBox(height: 10),
           // Display mock result images
-          for (String imagePath in _analysisResults!['segmented_images'])
+          for (String imagePath in _provider.laparoscopyResults!['segmented_images'])
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: Image.asset(
@@ -222,11 +204,11 @@ class _LaparoscopyAnalysisState extends State<LaparoscopyAnalysis> {
             ),
           const SizedBox(height: 16),
           Text(
-            'Area Percentage: ${_analysisResults!['area_percentage']}%',
+            'Area Percentage: ${_provider.laparoscopyResults!['area_percentage']}%',
             style: const TextStyle(fontSize: 16),
           ),
           Text(
-            'Severity: ${_analysisResults!['severity']}',
+            'Severity: ${_provider.laparoscopyResults!['severity']}',
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
@@ -234,7 +216,7 @@ class _LaparoscopyAnalysisState extends State<LaparoscopyAnalysis> {
             'Recommendations:',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
-          ..._analysisResults!['recommendations']
+          ..._provider.laparoscopyResults!['recommendations']
               .map((r) => Padding(
                     padding: const EdgeInsets.only(top: 8.0),
                     child: Text('• $r'),

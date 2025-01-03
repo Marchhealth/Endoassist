@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:html' as html;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:math';
 
 class ClassificationAssistantTab extends StatefulWidget {
   final Function(Map<String, String>)? onConfirm;
@@ -13,33 +14,227 @@ class ClassificationAssistantTab extends StatefulWidget {
 }
 
 class _ClassificationAssistantTabState extends State<ClassificationAssistantTab> {
-  List<String> selectedFiles = [];
+  List<html.File> selectedFiles = [];
   Map<String, dynamic>? aiResults;
   bool isLoading = false;
   bool isConfirmed = false;
 
+  final List<Map<String, dynamic>> possibleResults = [
+    {
+      'classification': 'Stage I Endometriosis',
+      'confidence': 0.75,
+      'details': {
+        'location': 'Pelvic region',
+        'size': '1.2 cm',
+        'severity': 'Mild',
+      }
+    },
+    {
+      'classification': 'Stage II Endometriosis',
+      'confidence': 0.80,
+      'details': {
+        'location': 'Ovarian endometriomas',
+        'size': '2.0 cm',
+        'severity': 'Moderate',
+      }
+    },
+    {
+      'classification': 'Stage III Endometriosis',
+      'confidence': 0.85,
+      'details': {
+        'location': 'Pelvic adhesions',
+        'size': '3.0 cm',
+        'severity': 'Moderate to Severe',
+      }
+    },
+    {
+      'classification': 'Stage IV Endometriosis',
+      'confidence': 0.90,
+      'details': {
+        'location': 'Deep infiltrating endometriosis',
+        'size': '4.5 cm',
+        'severity': 'Severe',
+      }
+    },
+    {
+      'classification': 'Stage I Endometriosis',
+      'confidence': 0.70,
+      'details': {
+        'location': 'Ovarian cysts',
+        'size': '1.0 cm',
+        'severity': 'Mild',
+      }
+    },
+    {
+      'classification': 'Stage II Endometriosis',
+      'confidence': 0.78,
+      'details': {
+        'location': 'Pelvic adhesions',
+        'size': '2.5 cm',
+        'severity': 'Moderate',
+      }
+    },
+    {
+      'classification': 'Stage III Endometriosis',
+      'confidence': 0.82,
+      'details': {
+        'location': 'Ovarian endometriomas',
+        'size': '3.2 cm',
+        'severity': 'Moderate to Severe',
+      }
+    },
+    {
+      'classification': 'Stage IV Endometriosis',
+      'confidence': 0.88,
+      'details': {
+        'location': 'Deep infiltrating endometriosis',
+        'size': '4.0 cm',
+        'severity': 'Severe',
+      }
+    },
+    {
+      'classification': 'Stage I Endometriosis',
+      'confidence': 0.72,
+      'details': {
+        'location': 'Pelvic region',
+        'size': '1.5 cm',
+        'severity': 'Mild',
+      }
+    },
+    {
+      'classification': 'Stage II Endometriosis',
+      'confidence': 0.79,
+      'details': {
+        'location': 'Ovarian cysts',
+        'size': '2.2 cm',
+        'severity': 'Moderate',
+      }
+    },
+    {
+      'classification': 'Stage III Endometriosis',
+      'confidence': 0.84,
+      'details': {
+        'location': 'Pelvic adhesions',
+        'size': '3.1 cm',
+        'severity': 'Moderate to Severe',
+      }
+    },
+    {
+      'classification': 'Stage IV Endometriosis',
+      'confidence': 0.92,
+      'details': {
+        'location': 'Deep infiltrating endometriosis',
+        'size': '4.8 cm',
+        'severity': 'Severe',
+      }
+    },
+    {
+      'classification': 'Stage I Endometriosis',
+      'confidence': 0.74,
+      'details': {
+        'location': 'Ovarian endometriomas',
+        'size': '1.3 cm',
+        'severity': 'Mild',
+      }
+    },
+    {
+      'classification': 'Stage II Endometriosis',
+      'confidence': 0.77,
+      'details': {
+        'location': 'Pelvic region',
+        'size': '2.1 cm',
+        'severity': 'Moderate',
+      }
+    },
+    {
+      'classification': 'Stage III Endometriosis',
+      'confidence': 0.83,
+      'details': {
+        'location': 'Ovarian cysts',
+        'size': '3.3 cm',
+        'severity': 'Moderate to Severe',
+      }
+    },
+    {
+      'classification': 'Stage IV Endometriosis',
+      'confidence': 0.89,
+      'details': {
+        'location': 'Deep infiltrating endometriosis',
+        'size': '4.2 cm',
+        'severity': 'Severe',
+      }
+    },
+    {
+      'classification': 'Stage I Endometriosis',
+      'confidence': 0.73,
+      'details': {
+        'location': 'Pelvic adhesions',
+        'size': '1.4 cm',
+        'severity': 'Mild',
+      }
+    },
+    {
+      'classification': 'Stage II Endometriosis',
+      'confidence': 0.76,
+      'details': {
+        'location': 'Ovarian endometriomas',
+        'size': '2.3 cm',
+        'severity': 'Moderate',
+      }
+    },
+    {
+      'classification': 'Stage III Endometriosis',
+      'confidence': 0.81,
+      'details': {
+        'location': 'Pelvic region',
+        'size': '3.4 cm',
+        'severity': 'Moderate to Severe',
+      }
+    },
+    {
+      'classification': 'Stage IV Endometriosis',
+      'confidence': 0.87,
+      'details': {
+        'location': 'Deep infiltrating endometriosis',
+        'size': '4.1 cm',
+        'severity': 'Severe',
+      }
+    },
+  ];
+
+  Future<void> _pickFiles() async {
+    final input = html.FileUploadInputElement()..accept = 'image/*'..multiple = true;
+    input.click();
+
+    await input.onChange.first;
+    if (input.files!.isNotEmpty) {
+      setState(() {
+        selectedFiles = input.files!;
+      });
+    }
+  }
+
   Future<void> _processImages() async {
+    if (selectedFiles.isEmpty) return;
+
     setState(() {
       isLoading = true;
     });
 
     try {
-      // TODO: Implement actual API call to AI model
-      // Simulating API response
+      // Simulate API call to AI model
       await Future.delayed(const Duration(seconds: 2));
+      final random = Random();
+      final randomResult = possibleResults[random.nextInt(possibleResults.length)];
       setState(() {
-        aiResults = {
-          'classification': 'Stage III Endometriosis',
-          'confidence': 0.89,
-          'details': {
-            'location': 'Ovarian endometriomas',
-            'size': '3.5 cm',
-            'severity': 'Moderate to Severe',
-          }
-        };
+        aiResults = randomResult;
       });
     } catch (e) {
       // Handle error
+      debugPrint('Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error processing images: $e')),
+      );
     } finally {
       setState(() {
         isLoading = false;
@@ -120,10 +315,7 @@ class _ClassificationAssistantTabState extends State<ClassificationAssistantTab>
                   const Text("Drag and drop MRI images here"),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: () {
-                      // TODO: Implement file selection
-                      _processImages();
-                    },
+                    onPressed: _pickFiles,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -133,6 +325,14 @@ class _ClassificationAssistantTabState extends State<ClassificationAssistantTab>
                   if (selectedFiles.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     Text("${selectedFiles.length} files selected"),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _processImages,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                      ),
+                      child: const Text("Analyze Images"),
+                    ),
                   ],
                 ],
               ),
@@ -177,8 +377,8 @@ class _ClassificationAssistantTabState extends State<ClassificationAssistantTab>
                     const Text("Details:", style: TextStyle(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
                     ...aiResults!['details'].entries.map((e) => 
-                      _buildResultItem(e.key.toString().toUpperCase(), e.value)
-                    ),
+                      _buildResultItem(e.key.toString().toUpperCase(), e.value.toString())
+                    ).toList(),
                   ],
                 ),
               ),
@@ -212,6 +412,15 @@ class _ClassificationAssistantTabState extends State<ClassificationAssistantTab>
           _buildBoxHeader("Confirm Analysis", Icons.check_circle),
           const SizedBox(height: 16),
           const Text("Are you sure you want to proceed with the analysis?"),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _confirmResults,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: const Text("Confirm Results"),
+          ),
         ],
       ),
     );

@@ -2,23 +2,26 @@ import 'package:flutter/material.dart';
 import 'dart:html' as html;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:provider/provider.dart';
+import 'providers/analysis_provider.dart';
 
 class LabReportUploadTab extends StatefulWidget {
-  const LabReportUploadTab({super.key});
+  final Function(Map<String, String>)? onConfirm;
+
+  const LabReportUploadTab({super.key, this.onConfirm});
 
   @override
   State<LabReportUploadTab> createState() => _LabReportUploadTabState();
 }
 
 class _LabReportUploadTabState extends State<LabReportUploadTab> {
-  html.File? _selectedFile;
-  bool _isProcessing = false;
-  bool _isConfirmed = false;
-  Map<String, dynamic>? _analysisResults;
-  String? _previewUrl;
-  String? _assistResponse;
-  bool _isSurgeonConfirmed = false;
-  bool _isWaitingForAssist = false;
+  late AnalysisProvider _provider;
+
+  @override
+  void initState() {
+    super.initState();
+    _provider = Provider.of<AnalysisProvider>(context, listen: false);
+  }
 
   Future<void> _pickFile() async {
     final input = html.FileUploadInputElement()..accept = '.pdf';
@@ -27,26 +30,22 @@ class _LabReportUploadTabState extends State<LabReportUploadTab> {
     await input.onChange.first;
     if (input.files!.isNotEmpty) {
       setState(() {
-        _selectedFile = input.files![0];
-        _previewUrl = html.Url.createObjectUrlFromBlob(_selectedFile!);
+        _provider.setSelectedFile(input.files![0]);
       });
     }
   }
 
   Future<void> _processFile() async {
-    if (_selectedFile == null) return;
+    if (_provider.selectedFile == null) return;
 
     setState(() {
-      _isProcessing = true;
-      _isWaitingForAssist = true;
+      _provider.setProcessing(true);
     });
 
     try {
-      // Simulate API call to Assist
       await Future.delayed(const Duration(seconds: 3));
       
-      // Mock response from Assist
-      _assistResponse = '''
+      _provider.setAssistResponse('''
         Analysis Results:
         - CA-125 Level: 45 U/mL (Elevated)
         - Hormonal Imbalance Detected
@@ -58,33 +57,31 @@ class _LabReportUploadTabState extends State<LabReportUploadTab> {
         1. Further diagnostic imaging
         2. Hormonal therapy consideration
         3. Surgical evaluation recommended
-      ''';
+      ''');
 
-      setState(() {
-        _analysisResults = {
-          'findings': _assistResponse,
-          'confidence': 0.89,
-          'needsSurgeonConfirmation': true,
-        };
-        _isWaitingForAssist = false;
+      _provider.setAnalysisResults({
+        'findings': _provider.assistResponse,
+        'confidence': '0.89', // Convert to String
+        'needsSurgeonConfirmation': 'true', // Convert to String
       });
     } catch (e) {
       debugPrint('Error: $e');
-      // Show error in UI
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Error processing file')),
       );
     } finally {
-      setState(() => _isProcessing = false);
+      setState(() {
+        _provider.setProcessing(false);
+      });
     }
   }
 
   Future<void> _handleSurgeonConfirmation() async {
-    setState(() => _isSurgeonConfirmed = true);
+    setState(() {
+      _provider.setSurgeonConfirmed(true);
+    });
 
     try {
-      // Send confirmed analysis to Assist recommendation
-      // Simulate API call
       await Future.delayed(const Duration(seconds: 2));
       
       ScaffoldMessenger.of(context).showSnackBar(
@@ -105,8 +102,7 @@ class _LabReportUploadTabState extends State<LabReportUploadTab> {
   }
 
   void _confirmResults() async {
-    if (_analysisResults != null) {
-      // Send to surgery recommendation assistant
+    if (_provider.analysisResults != null) {
       final response = await http.post(
         Uri.parse('https://marchv1.openai.azure.com/openai/deployments/gpt-4/chat/completions?api-version=2024-02-15-preview'),
         headers: {
@@ -121,34 +117,44 @@ class _LabReportUploadTabState extends State<LabReportUploadTab> {
             },
             {
               "role": "user",
-              "content": jsonEncode(_analysisResults)
+              "content": jsonEncode(_provider.analysisResults)
             }
           ]
         }),
       );
+
+      if (widget.onConfirm != null) {
+        widget.onConfirm!(_provider.analysisResults!.map((key, value) => MapEntry(key, value.toString())));
+      }
       
-      setState(() => _isConfirmed = true);
+      setState(() {
+        _provider.setConfirmed(true);
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(flex: 1, child: _buildUploadBox()),
-          const SizedBox(width: 24),
-          Expanded(flex: 1, child: _buildResultsBox()),
-          const SizedBox(width: 24),
-          Expanded(flex: 1, child: _buildConfirmationBox()),
-        ],
-      ),
+    return Consumer<AnalysisProvider>(
+      builder: (context, provider, child) {
+        return Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(flex: 1, child: _buildUploadBox(provider)),
+              const SizedBox(width: 24),
+              Expanded(flex: 1, child: _buildResultsBox(provider)),
+              const SizedBox(width: 24),
+              Expanded(flex: 1, child: _buildConfirmationBox(provider)),
+            ],
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildUploadBox() {
+  Widget _buildUploadBox(AnalysisProvider provider) {
     return Container(
       height: 500,
       decoration: BoxDecoration(
@@ -183,9 +189,9 @@ class _LabReportUploadTabState extends State<LabReportUploadTab> {
                     ),
                     child: const Text("Select PDF"),
                   ),
-                  if (_selectedFile != null) ...[
+                  if (provider.selectedFile != null) ...[
                     const SizedBox(height: 16),
-                    Text("Selected: ${_selectedFile!.name}"),
+                    Text("Selected: ${provider.selectedFile!.name}"),
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: _processFile,
@@ -204,7 +210,7 @@ class _LabReportUploadTabState extends State<LabReportUploadTab> {
     );
   }
 
-  Widget _buildResultsBox() {
+  Widget _buildResultsBox(AnalysisProvider provider) {
     return Container(
       height: 500,
       decoration: BoxDecoration(
@@ -221,7 +227,7 @@ class _LabReportUploadTabState extends State<LabReportUploadTab> {
       child: Column(
         children: [
           _buildBoxHeader("Analysis Results", Icons.analytics),
-          if (_isProcessing || _isWaitingForAssist)
+          if (provider.isProcessing || provider.isWaitingForAssist)
             const Expanded(
               child: Center(
                 child: Column(
@@ -234,21 +240,21 @@ class _LabReportUploadTabState extends State<LabReportUploadTab> {
                 ),
               ),
             )
-          else if (_analysisResults != null)
+          else if (provider.analysisResults != null)
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildResultSection("Analysis from Assist", _assistResponse ?? ""),
+                    _buildResultSection("Analysis from Assist", provider.assistResponse ?? ""),
                     const SizedBox(height: 16),
                     _buildResultSection(
                       "Confidence Score",
-                      "${(_analysisResults!['confidence'] * 100).toStringAsFixed(1)}%",
+                      "${(double.parse(provider.analysisResults!['confidence']) * 100).toStringAsFixed(1)}%",
                     ),
                     const SizedBox(height: 24),
-                    if (!_isSurgeonConfirmed)
+                    if (!provider.isSurgeonConfirmed)
                       Center(
                         child: ElevatedButton.icon(
                           onPressed: _handleSurgeonConfirmation,
@@ -263,7 +269,7 @@ class _LabReportUploadTabState extends State<LabReportUploadTab> {
                           ),
                         ),
                       ),
-                    if (_isSurgeonConfirmed)
+                    if (provider.isSurgeonConfirmed)
                       const Center(
                         child: Text(
                           "✓ Analysis confirmed by surgeon",
@@ -288,7 +294,7 @@ class _LabReportUploadTabState extends State<LabReportUploadTab> {
     );
   }
 
-  Widget _buildConfirmationBox() {
+  Widget _buildConfirmationBox(AnalysisProvider provider) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -306,11 +312,11 @@ class _LabReportUploadTabState extends State<LabReportUploadTab> {
           _buildBoxHeader("Confirm Analysis", Icons.check_circle),
           const SizedBox(height: 16),
           Text(
-            _isConfirmed
+            provider.isConfirmed
                 ? "Analysis confirmed and sent to surgery recommendation"
                 : "Review the analysis results and confirm if accurate",
           ),
-          if (_analysisResults != null && !_isConfirmed) ...[
+          if (provider.analysisResults != null && !provider.isConfirmed) ...[
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _confirmResults,

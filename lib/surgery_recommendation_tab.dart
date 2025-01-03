@@ -9,18 +9,32 @@ class SurgeryRecommendationTab extends StatefulWidget {
 
   @override
   State<SurgeryRecommendationTab> createState() => _SurgeryRecommendationTabState();
+
+  void addMessageToChat(String message) {
+    _SurgeryRecommendationTabState._messages.add({
+      'role': 'user',
+      'content': message
+    });
+    
+    // Trigger a new response from the AI
+    _SurgeryRecommendationTabState._sendStaticMessage(message);
+  }
 }
 
 class _SurgeryRecommendationTabState extends State<SurgeryRecommendationTab> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final List<Map<String, String>> _messages = [];
+  static final List<Map<String, String>> _messages = []; // Changed to static
+  static bool _hasInitializedChat = false; // Added static flag
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _prepareInitialPrompt();
+    if (!_hasInitializedChat) { // Only send initial prompt if not initialized
+      _prepareInitialPrompt();
+      _hasInitializedChat = true;
+    }
   }
 
   void _prepareInitialPrompt() {
@@ -176,11 +190,12 @@ Based on the following patient data, please provide a surgery recommendation ana
 
   Widget _buildMessagesList() {
     return ListView.builder(
+      controller: _scrollController,
       padding: const EdgeInsets.all(16.0),
       itemCount: _messages.length,
       itemBuilder: (context, index) {
         final message = _messages[index];
-        final isUser = message['role'] == 'User';
+        final isUser = message['role']?.toLowerCase() == 'user';
         return _buildMessageBubble(message, isUser);
       },
     );
@@ -270,15 +285,41 @@ Based on the following patient data, please provide a surgery recommendation ana
     );
   }
 
+  String _getPatientContext() {
+    return """
+Patient Profile:
+- Name: ${widget.patientData['name']}
+- Age: ${_calculateAge(widget.patientData['dateOfBirth'] ?? '')}
+- Diagnosis: ${widget.patientData['diagnosis']}
+- CA-125 Level: ${widget.patientData['ca125']} U/mL
+- AMH Level: ${widget.patientData['amh']} ng/mL
+- Symptoms: ${widget.patientData['symptoms']}
+""";
+  }
+
   Future<void> _sendMessage(String message, {bool isInitial = false}) async {
     setState(() {
       if (!isInitial) {
-        _messages.add({'role': 'User', 'content': message});
+        _messages.add({'role': 'user', 'content': message});
       }
       _isLoading = true;
     });
 
     try {
+      // Include patient context in system message
+      final List<Map<String, String>> messageHistory = [
+        {
+          'role': 'system',
+          'content': '''You are an endometriosis surgery recommendation assistant. 
+Consider the following patient context for all recommendations:
+${_getPatientContext()}'''
+        },
+        ..._messages.map((m) => {
+              'role': m['role']?.toLowerCase() ?? 'user',
+              'content': m['content'] ?? ''
+            })
+      ];
+
       final response = await http.post(
         Uri.parse('https://marchv1.openai.azure.com/openai/deployments/gpt-4/chat/completions?api-version=2024-02-15-preview'),
         headers: {
@@ -286,13 +327,7 @@ Based on the following patient data, please provide a surgery recommendation ana
           'api-key': 'b12a39b621964269a0da06699f814f01',
         },
         body: jsonEncode({
-          "messages": [
-            {
-              "role": "system",
-              "content": "You are an endometriosis surgery recommendation assistant. Analyze patient data and lab results to provide evidence-based surgical recommendations."
-            },
-            {"role": "user", "content": message}
-          ]
+          "messages": messageHistory,
         }),
       );
 
@@ -302,7 +337,7 @@ Based on the following patient data, please provide a surgery recommendation ana
                      'No response available from the AI.';
         
         setState(() {
-          _messages.add({'role': 'AI', 'content': reply});
+          _messages.add({'role': 'assistant', 'content': reply}); // Changed 'AI' to 'assistant'
         });
       } else {
         setState(() {
@@ -321,7 +356,76 @@ Based on the following patient data, please provide a surgery recommendation ana
       });
     } finally {
       setState(() => _isLoading = false);
+      _scrollToBottom(); // Scroll to bottom when new messages arrive
     }
+  }
+
+  static Future<void> _sendStaticMessage(String message) async {
+    try {
+      // Get patient context from the latest instance
+      final patientContext = _messages.isNotEmpty 
+          ? _messages.first['content'] ?? ''
+          : '';
+
+      final List<Map<String, String>> messageHistory = [
+        {
+          'role': 'system',
+          'content': '''You are an endometriosis surgery recommendation assistant. 
+Consider the following patient context for all recommendations:
+$patientContext'''
+        },
+        ..._messages,
+        {'role': 'user', 'content': message}
+      ];
+
+      final response = await http.post(
+        Uri.parse('https://marchv1.openai.azure.com/openai/deployments/gpt-4/chat/completions?api-version=2024-02-15-preview'),
+        headers: {
+          'Content-Type': 'application/json',
+          'api-key': 'b12a39b621964269a0da06699f814f01',
+        },
+        body: jsonEncode({
+          "messages": messageHistory,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        final reply = responseData['choices']?[0]?['message']?['content'] ?? 
+                     'No response available from the AI.';
+        
+        _messages.add({'role': 'assistant', 'content': reply});
+      } else {
+        _messages.add({
+          'role': 'assistant',
+          'content': 'Error: ${response.statusCode} - ${response.body}'
+        });
+      }
+    } catch (e) {
+      _messages.add({
+        'role': 'assistant',
+        'content': 'Error processing message: ${e.toString()}'
+      });
+    }
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    _scrollController.dispose();
+    super.dispose();
   }
 
   int _calculateAge(String dateOfBirth) {
